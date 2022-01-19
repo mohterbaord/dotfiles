@@ -1,0 +1,4 @@
+dist/
+.vscode/
+config/config.ini
+config/include/module/bluetooth.ini
