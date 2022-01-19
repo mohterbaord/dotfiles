@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 FG_RED='\033[0;31m'
 FG_GREEN='\033[0;32m'
