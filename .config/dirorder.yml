@@ -1,0 +1,43 @@
+name: data
+subdirs:
+  - books
+  - docs
+  -
+    name: downloads
+    subdirs:
+      - firefox
+      - telegram
+  -
+    name: media
+    subdirs:
+      -
+        name: audio
+        subdirs:
+          - books
+          - music
+          - records
+      -
+        name: pics
+        subdirs:
+          - memes
+          - photos
+          -
+            name: screenshots
+            subdirs:
+              - frameshot
+              - scrot
+          - wallpapers
+      - name: vids
+        subdirs:
+          - anateur
+          - anime
+          - movies
+          - series
+  -
+    name: projects
+    subdirs:
+      -
+        name: soft
+        subdirs:
+          - github
+          - mohterbaord
