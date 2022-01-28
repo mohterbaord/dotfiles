@@ -1,0 +1,54 @@
+#!/bin/sh
+
+function _bluetooth_status() {
+  bluetoothctl | while read -r; do
+    if [ "$(systemctl is-active "bluetooth.service")" = "active" ]; then
+      if [ $(bluetoothctl show | grep "Powered: yes" | wc -c ) -eq 0 ]; then 
+        echo '%{F#666}%{F-}'
+      else
+        devices_paired=$(bluetoothctl paired-devices | grep Device | cut -d ' ' -f 2)
+        for device in $devices_paired; do
+          device_info=$(bluetoothctl info "$device")
+          if echo "$device_info" | grep -q "Connected: yes"; then
+            echo '%{F#00af87}%{F-}'
+            return 0
+          fi
+        done
+        echo '%{F#c0c0c0}%{F-}'
+      fi
+    else
+      return 1
+    fi
+  done
+}
+
+function _control_paired_devices() {
+  local bluetoothctl_action="$1"
+  local devices_paired=$(bluetoothctl paired-devices | grep Device | cut -d ' ' -f 2)
+  echo "$devices_paired" | while read -r line; do
+    bluetoothctl "$bluetoothctl_action" "$line" >> /dev/null
+  done
+}
+
+function _bluetooth_toggle() {
+  if bluetoothctl show | grep -q "Powered: no"; then
+    bluetoothctl power on >> /dev/null
+    sleep 1
+    _control_paired_devices connect
+  else
+    _control_paired_devices disconnect
+    bluetoothctl power off >> /dev/null
+  fi
+}
+
+case "$1" in
+  toggle)
+    _bluetooth_toggle
+    ;;
+  status)
+    _bluetooth_status
+    ;;
+  *)
+    echo "Usage: bluetooth toggle|status"
+    ;;
+esac

@@ -182,8 +182,7 @@ bindsym Print exec scrot --exec 'mv $f $scrot_dir'
 bindsym Ctrl+Print exec scrot --focused --exec 'mv $f $scrot_dir'
 
 ## Bluetooth toggling
-# TODO
-#bindsym $mod+b exec --no-startup-id bluetooth-toggle
+bindsym $mod+b exec --no-startup-id "bluepoop toggle"
 
 
 # Application's workspace configuration
