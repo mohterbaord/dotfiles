@@ -22,7 +22,7 @@ bindkey -e
 alias diff='diff --color=auto'
 alias grep='grep --color=auto'
 alias ip='ip -color=auto'
-alias ls='ls --color=auto'
+alias ls='ls --color=auto --group-directories-first'
 export LESS='-R --use-color -Dd+r$Du+b'
 export MANPAGER='less -R --use-color -Dd+r -Du+b'
 
