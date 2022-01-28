@@ -1,0 +1,26 @@
+#!/bin/sh
+
+function do_player_action {
+  local PLAYER_DEST="org.mpris.MediaPlayer2.spotify"
+  local PLAYER_PATH="/org/mpris/MediaPlayer2"
+  local PLAYER_CONTROLLER="org.mpris.MediaPlayer2.Player"
+
+  local controller_action="$1"
+  dbus-send --print-reply --dest="$PLAYER_DEST" "$PLAYER_PATH" "$PLAYER_CONTROLLER.$controller_action"
+}
+
+case "$1" in
+  "--play-pause")
+    do_player_action PlayPause
+    ;;
+  "--next")
+    do_player_action Next
+    ;;
+  "--previous")
+    do_player_action Previous
+    ;;
+  *)
+    echo "Usage: playerctl --play-pause | --next | --previous"
+    exit 1
+    ;;
+esac

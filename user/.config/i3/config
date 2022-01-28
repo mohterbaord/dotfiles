@@ -1,0 +1,231 @@
+set $mod Mod4
+
+font pango:monospace 8
+
+exec --no-startup-id dex --autostart --environment i3
+exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
+exec --no-startup-id nm-applet
+
+# PulseAudio
+set $refresh_i3status killall -SIGUSR1 i3status
+bindsym XF86AudioRaiseVolume exec --no-startup-id pa-set-sink-volume-limited @DEFAULT_SINK@ +5% 100 && $refresh_i3status
+bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5% && $refresh_i3status
+bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status
+bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
+
+# Audio player control
+bindsym XF86AudioPlay exec --no-startup-id "playerctl --play-pause"
+bindsym XF86AudioNext exec --no-startup-id "playerctl --next"
+bindsym XF86AudioPrev exec --no-startup-id "playerctl --previous"
+
+# Special button on my Lenovo ThinkPad X230 - using for test purposes
+bindsym XF86Launch1 exec --no-startup-id "notify-send 'what is going on?'"
+
+# xbacklight
+bindsym XF86MonBrightnessDown exec --no-startup-id xbacklight -dec 10 && $refresh_i3status
+bindsym XF86MonBrightnessUp exec --no-startup-id xbacklight -inc 10 && $refresh_i3status
+
+# Use Mouse+$mod to drag floating windows to their wanted position
+floating_modifier $mod
+
+# start a terminal
+bindsym $mod+Return exec alacritty
+
+# kill focused window
+bindsym $mod+Shift+q kill
+
+# Application launcher
+# TODO: rofi configuration
+bindsym $mod+d exec "rofi -modi drun,run -show drun -theme mohterbaord"
+
+# change focus
+bindsym $mod+j focus left
+bindsym $mod+k focus down
+bindsym $mod+l focus up
+bindsym $mod+semicolon focus right
+
+# alternatively, you can use the cursor keys:
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# move focused window
+bindsym $mod+Shift+j move left
+bindsym $mod+Shift+k move down
+bindsym $mod+Shift+l move up
+bindsym $mod+Shift+semicolon move right
+
+# alternatively, you can use the cursor keys:
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# split in horizontal orientation
+bindsym $mod+h split h
+
+# split in vertical orientation
+bindsym $mod+v split v
+
+# enter fullscreen mode for the focused container
+bindsym $mod+f fullscreen toggle
+
+# change container layout (stacked, tabbed, toggle split)
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+# toggle tiling / floating
+bindsym $mod+Shift+space floating toggle
+
+# change focus between tiling / floating windows
+bindsym $mod+space focus mode_toggle
+
+# focus the parent container
+bindsym $mod+a focus parent
+
+# Workspaces
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9"
+set $ws10 "10"
+
+# switch to workspace
+bindsym $mod+1 workspace number $ws1
+bindsym $mod+2 workspace number $ws2
+bindsym $mod+3 workspace number $ws3
+bindsym $mod+4 workspace number $ws4
+bindsym $mod+5 workspace number $ws5
+bindsym $mod+6 workspace number $ws6
+bindsym $mod+7 workspace number $ws7
+bindsym $mod+8 workspace number $ws8
+bindsym $mod+9 workspace number $ws9
+bindsym $mod+0 workspace number $ws10
+
+# move focused container to workspace
+bindsym $mod+Shift+1 move container to workspace number $ws1
+bindsym $mod+Shift+2 move container to workspace number $ws2
+bindsym $mod+Shift+3 move container to workspace number $ws3
+bindsym $mod+Shift+4 move container to workspace number $ws4
+bindsym $mod+Shift+5 move container to workspace number $ws5
+bindsym $mod+Shift+6 move container to workspace number $ws6
+bindsym $mod+Shift+7 move container to workspace number $ws7
+bindsym $mod+Shift+8 move container to workspace number $ws8
+bindsym $mod+Shift+9 move container to workspace number $ws9
+bindsym $mod+Shift+0 move container to workspace number $ws10
+
+# Assigning workspaces to specific screens
+set $lvds LVDS1
+set $vga VGA1
+workspace $ws1 output $lvds
+workspace $ws2 output $vga
+workspace $ws3 output $lvds
+workspace $ws4 output $vga
+workspace $ws5 output $lvds
+workspace $ws6 output $vga
+workspace $ws7 output $lvds
+workspace $ws8 output $vga
+workspace $ws9 output $lvds
+workspace $ws10 output $vga
+
+# reload the configuration file
+bindsym $mod+Shift+c reload
+# restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
+bindsym $mod+Shift+r restart
+
+
+# Modes
+
+## Exit i3
+set $mode_exit exit i3? [y/n]
+bindsym $mod+Shift+e mode "$mode_exit"
+mode "$mode_exit" {
+    bindsym y exec i3-msg exit
+    bindsym n mode "default"
+    bindsym Escape mode "default"
+    bindsym Return mode "default"
+    bindsym $mod+r mode "default"
+}
+
+## Resize window
+set $mode_resize resize
+bindsym $mod+r mode "$mode_resize"
+mode "$mode_resize" {
+    bindsym j resize shrink width 10 px or 10 ppt
+    bindsym k resize grow height 10 px or 10 ppt
+    bindsym l resize shrink height 10 px or 10 ppt
+    bindsym semicolon resize grow width 10 px or 10 ppt
+
+    bindsym Left resize shrink width 10 px or 10 ppt
+    bindsym Down resize grow height 10 px or 10 ppt
+    bindsym Up resize shrink height 10 px or 10 ppt
+    bindsym Right resize grow width 10 px or 10 ppt
+
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+    bindsym $mod+r mode "default"
+}
+
+
+# Utils
+
+## Making Screenshots
+set $scrot_dir /media/riot-observer/data/media/pics/screenshots/scrot/
+bindsym Print exec scrot --exec 'mv $f $scrot_dir'
+bindsym Ctrl+Print exec scrot --focused --exec 'mv $f $scrot_dir'
+
+## Bluetooth toggling
+# TODO
+#bindsym $mod+b exec --no-startup-id bluetooth-toggle
+
+
+# Application's workspace configuration
+
+## i3gaps
+for_window [class="^.*"] border pixel 2
+gaps inner 2
+smart_gaps on
+smart_borders on
+
+## Firefox
+for_window [class="firefox"] move to workspace $ws2, workspace --no-auto-back-and-forth
+
+## Spotify
+for_window [class="Spotify"] move to workspace $ws10, workspace --no-auto-back-and-forth 
+
+## Telegram
+for_window [class="TelegramDesktop"] move to workspace $ws7, workspace --no-auto-back-and-forth
+
+
+# Colors
+client.focused #00af87 #00af87 #c0c0c0 #00875f #00af87
+client.unfocused #232323 #232323 #666666 #232323 #232323
+
+
+# Autostart
+
+## Autorand for multi-monitor autodetection
+exec_always --no-startup-id "autorandr --change"
+
+## Polybar
+set $POLYBAR_HOME $HOME/.config/polybar
+exec_always --no-startup-id "POLYBAR_HOME=$POLYBAR_HOME $POLYBAR_HOME/bin/launch.sh"
+
+## Dunst
+exec_always --no-startup-id "killall dunst && /sbin/dunst --config $HOME/.config/dunst/dunstrc"
+
+## Set wallpaper
+exec_always feh --no-fehbg --bg-fill "$HOME/.config/bg"
+
+## Conky
+exec conky
+
+## Start apps on boot
+exec i3-msg 'workspace 1; exec alacritty; exec firefox; exec telegram-desktop; exec spotify'

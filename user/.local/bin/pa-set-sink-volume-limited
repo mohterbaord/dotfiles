@@ -1,0 +1,58 @@
+#!/bin/sh
+
+SINK=$1
+
+VOLUME=$(echo "$2" \
+  | grep --extended-regexp '^[+-]?[[:digit:]]+%$' \
+  | tr --delete '\n')
+
+LIMIT=$(echo "$3" \
+  | grep --extended-regexp '^[[:digit:]]+$' \
+  | tr --delete '\n')
+
+if [ -z $VOLUME ] || [ -z $LIMIT ]; then
+  exit 0
+fi
+
+#
+
+VOLUME_RAISE=$(echo $VOLUME \
+  | sed --regexp-extended 's/^(\+?).*/\1/' \
+  | tr --delete '\n')
+
+if [ -z $VOLUME_RAISE ]; then
+  pactl set-sink-volume "$SINK" $VOLUME
+  exit 0
+fi
+
+#
+
+CURRENT_VOLUMES=$(pactl get-sink-volume "$SINK" \
+  | head --lines=1 \
+  | tr --delete '\n')
+
+CURRENT_VOLUME_LEFT=$(echo "$CURRENT_VOLUMES" \
+  | sed --regexp-extended 's/^Volume:\s+front-left:\s+[[:digit:]]+\s+\/\s+([[:digit:]]+)%.*/\1/')
+
+CURRENT_VOLUME_RIGHT=$(echo "$CURRENT_VOLUMES" \
+  | sed --regexp-extended 's/.*\s+([[:digit:]]+)%\s+\/.*\s+dB\s*$/\1/')
+
+CURRENT_VOLUME=$(($CURRENT_VOLUME_LEFT > $CURRENT_VOLUME_RIGHT ? $CURRENT_VOLUME_LEFT : $CURRENT_VOLUME_RIGHT))
+
+if [ $CURRENT_VOLUME -eq $LIMIT ]; then
+  exit 0
+fi
+
+VOLUME_RAISING=$(echo $VOLUME \
+  | sed --regexp-extended 's/^\+(.*)%$/\1/' \
+  | tr --delete '\n')
+
+RAISED_VOLUME=$(($CURRENT_VOLUME + $VOLUME_RAISING))
+
+#
+
+if [ $RAISED_VOLUME -le $LIMIT ]; then
+  pactl set-sink-volume "$SINK" $VOLUME
+else
+  pactl set-sink-volume "$SINK" "$LIMIT%"
+fi
