@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Reloads font cache for all bars to manually fix fonts not loaded issue.
+
+fc-cache -rv
+polybar-msg cmd restart
