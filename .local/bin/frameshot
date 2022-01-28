@@ -1,0 +1,4 @@
+#!/bin/sh
+
+timestamp=`date +"%F_%H-%M-%S"`
+fbgrab "$HOME/data/media/pics/screenshots/framebuffer/frameshot_$timestamp.png" 2> /dev/null
