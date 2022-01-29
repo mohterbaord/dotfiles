@@ -31,7 +31,7 @@ alias ll='ls -lh'
 alias lal='ls -lah'
 
 # Prompts
-PS1="%B%F{magenta}%n%f%b%F{green}@%m%f%B%F{magenta}:%f%b%F{yellow}%~%f"$'\n'"%B%F{magenta}$%f%b "
+PS1="%F{13}%n%f%F{10}@%m%f%F{13}:%f%F{yellow}%~%f"$'\n'"%F{13}$%f "
 
 # Bindkeys
 
