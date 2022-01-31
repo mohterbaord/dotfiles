@@ -30,6 +30,9 @@ export MANPAGER='less -R --use-color -Dd+r -Du+b'
 alias ll='ls -lh'
 alias lal='ls -lah'
 
+# Firefox log
+alias firefox='firefox --MOZ_LOG_FILE=/tmp/firefox.log'
+
 # Prompts
 PS1="%F{13}%n%f%F{10}@%m%f%F{13}:%f%F{yellow}%~%f"$'\n'"%F{13}$%f "
 
