@@ -1,5 +1,7 @@
 all: polybar zsh i3 conky
 
+all-system: vconsole
+
 polybar:
 	@(cd user/.config/polybar/; ./compile-bundle.sh)
 	@install --verbose --compare --directory \
@@ -71,3 +73,7 @@ conky:
 		user/.config/conky/section_processes.lua \
 		user/.config/conky/section_time.lua \
 		user/.config/conky/section_usage.lua
+
+system-vconsole:
+	@install --verbose --compare --mode=644 --group=root --owner=root --target-directory=/etc \
+		system/etc/vconsole.conf
