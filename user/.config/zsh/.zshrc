@@ -60,6 +60,7 @@ bindkey_terminfo  kcuf1 forward-char                    # Right
 bindkey_terminfo  kpp   beginning-of-buffer-or-history  # PgUp
 bindkey_terminfo  knp   end-of-buffer-or-history        # PgDown
 bindkey_terminfo  kLFT5 backward-word                   # Ctrl+Left
+bindkey_terminfo  kRIT5 forward-word                    # Ctrl+Right
 bindkey_terminfo  kcbt  reverse-menu-complete           # Shift+Tab
 
 if (( ${+terminfo[smkx]} && ${+terminfo[rmkx]} )); then
