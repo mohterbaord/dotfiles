@@ -1,4 +1,4 @@
-all: polybar zsh i3
+all: polybar zsh i3 conky
 
 polybar:
 	@(cd user/.config/polybar/; ./compile-bundle.sh)
@@ -59,3 +59,15 @@ i3:
 		user/.local/bin/pa-set-sink-volume-limited \
 		user/.local/bin/playerctl \
 		user/.local/bin/scrotcrop
+
+conky:
+	@install --verbose --compare --directory \
+		$$HOME/.config/conky
+	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/conky \
+		user/.config/conky/config.lua \
+		user/.config/conky/conky.lua \
+		user/.config/conky/format.lua \
+		user/.config/conky/section_network.lua \
+		user/.config/conky/section_processes.lua \
+		user/.config/conky/section_time.lua \
+		user/.config/conky/section_usage.lua
