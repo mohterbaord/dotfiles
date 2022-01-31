@@ -226,5 +226,8 @@ exec_always feh --no-fehbg --bg-fill "$HOME/.config/bg"
 ## Conky
 exec conky
 
+# Reloading fonts (issue)
+exec_always --no-startup-id "fc-cache -rv >/dev/null"
+
 ## Start apps on boot
 exec i3-msg 'workspace 1; exec alacritty; exec firefox; exec telegram-desktop; exec spotify'
