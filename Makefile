@@ -1,6 +1,6 @@
 all: polybar zsh i3 conky
 
-all-system: vconsole
+all-system: vconsole udev
 
 polybar:
 	@(cd user/.config/polybar/; ./compile-bundle.sh)
@@ -77,3 +77,9 @@ conky:
 system-vconsole:
 	@install --verbose --compare --mode=644 --group=root --owner=root --target-directory=/etc \
 		system/etc/vconsole.conf
+
+system-udev:
+	@install --verbose --compare --mode=755 --group=root --owner=root --directory \
+		/etc/udev/rules.d
+	@install --verbose --compare --mode=644 --group=root --owner=root --target-directory=/etc/udev/rules.d \
+		system/etc/udev/rules.d/81-backlight.rules
