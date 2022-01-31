@@ -1,6 +1,6 @@
 all: polybar zsh i3 conky
 
-all-system: vconsole udev
+all-system: system-vconsole system-udev system-xorg
 
 polybar:
 	@(cd user/.config/polybar/; ./compile-bundle.sh)
@@ -83,3 +83,12 @@ system-udev:
 		/etc/udev/rules.d
 	@install --verbose --compare --mode=644 --group=root --owner=root --target-directory=/etc/udev/rules.d \
 		system/etc/udev/rules.d/81-backlight.rules
+
+system-xorg:
+	@install --verbose --compare --mode=755 --group=root --owner=root --directory \
+		/etc/X11/xorg.conf.d
+	@install --verbose --compare --mode=644 --group=root --owner=root --target-directory=/etc/X11/xorg.conf.d \
+		system/etc/X11/xorg.conf.d/00-keyboard.conf \
+		system/etc/X11/xorg.conf.d/10-monitor.conf \
+		system/etc/X11/xorg.conf.d/20-intel.conf \
+		system/etc/X11/xorg.conf.d/90-touchpad.conf
