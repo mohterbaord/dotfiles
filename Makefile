@@ -57,4 +57,5 @@ i3:
 	@install --verbose --compare --target-directory=$$HOME/.local/bin \
 		user/.local/bin/bluepoop \
 		user/.local/bin/pa-set-sink-volume-limited \
-		user/.local/bin/playerctl
+		user/.local/bin/playerctl \
+		user/.local/bin/scrotcrop

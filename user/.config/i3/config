@@ -177,9 +177,9 @@ mode "$mode_resize" {
 # Utils
 
 ## Making Screenshots
-set $scrot_dir /media/riot-observer/data/media/pics/screenshots/scrot/
-bindsym Print exec scrot --exec 'mv $f $scrot_dir'
-bindsym Ctrl+Print exec scrot --focused --exec 'mv $f $scrot_dir'
+set $SCROT_DIR $HOME/data/media/pics/screenshots/scrot
+bindsym Print exec "SCROT_DIR=$SCROT_DIR scrotcrop"
+bindsym Ctrl+Print exec "SCROT_DIR=$SCROT_DIR CHMON=false scrotcrop --focused"
 
 ## Bluetooth toggling
 bindsym $mod+b exec --no-startup-id "bluepoop toggle"

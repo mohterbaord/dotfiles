@@ -1,0 +1,82 @@
+#!/bin/sh
+
+# Environment:
+#   SCROT_DIR - path (required)
+#   CHMON - boolean (optional, default = true)
+if [ -z "$CHMON" ]; then
+  CHMON=true
+fi
+
+# \1 - index
+# \2 - output label
+# \3 - width (px)
+# \4 - width (mm)
+# \5 - height (px)
+# \6 - height (mm)
+# \7 - width offset (px)
+# \8 - height offset (px)
+# \9 - identifier
+XRANDR_MONITOR_PATTERN='^\s([[:digit:]]+):\s\+?\*?(\w*)\s([[:digit:]]+)\/([[:digit:]]+)x([[:digit:]]+)\/([[:digit:]]+)\+([[:digit:]]+)\+([[:digit:]]+)\s+(\w+)$'
+
+# \1 - timestamp
+# \2 - width (px)
+# \3 - height (px)
+# \4 - extension
+SCROT_FILENAME_PATTERN='^([[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2}-[[:digit:]]{6})_(\w+)x(\w+)_scrot\.(\w+)$'
+
+
+# Make screenshot
+scrot_file=$(scrot --exec "mv \$f $SCROT_DIR; echo \$f" $@)
+
+
+[ "$CHMON" = false ] && exit
+
+
+# Select monitor to cut screenshot
+list_active_monitors_output=$(xrandr --listactivemonitors)
+
+monitors_count=$(echo "$list_active_monitors_output" \
+  | head -1 \
+  | sed --regexp-extended 's/^Monitors: ([[:digit:]]+)$/\1/')
+[[ "$monitors_count" -eq 1 ]] && exit
+
+active_monitors=$(echo "$list_active_monitors_output" \
+  | tail -$monitors_count)
+
+active_monitors_pattern=$(echo "$active_monitors" \
+  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\9/")
+active_monitors_pattern=$(echo $active_monitors_pattern \
+  | sed --regexp-extended 's/\s/|/')
+active_monitors_pattern="^($active_monitors_pattern)\s(connected)"
+connected_monitors_count=$(xrandr \
+  | grep --extended-regexp "$active_monitors_pattern" \
+  | wc --lines)
+echo $connected_monitors_count
+[ "$connected_monitors_count" -le 1 ] && exit
+
+selected_monitor=$(echo "$active_monitors" \
+  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\9/" \
+  | rofi -dmenu -p "Screenshot for monitor...")
+[[ $(echo -n "$selected_monitor" | wc -c) -eq 0 ]] && exit
+
+
+# Cut screenshot
+selected_monitor_info=$(echo "$active_monitors" | grep "$selected_monitor")
+selected_monitor_width=$(echo "$selected_monitor_info" \
+  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\3/")
+selected_monitor_height=$(echo "$selected_monitor_info" \
+  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\5/")
+selected_monitor_width_offset=$(echo "$selected_monitor_info" \
+  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\7/")
+selected_monitor_height_offset=$(echo "$selected_monitor_info" \
+  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\8/")
+
+output_file=$(echo "$scrot_file" \
+  | sed --regexp-extended "s/$SCROT_FILENAME_PATTERN/\1_${selected_monitor}_${selected_monitor_width}x${selected_monitor_height}_scrot.\4/")
+
+mogrify \
+  -crop "${selected_monitor_width}x${selected_monitor_height}+${selected_monitor_width_offset}+${selected_monitor_height_offset}" \
+  -write "$SCROT_DIR/$output_file" \
+  "$SCROT_DIR/$scrot_file"
+
+rm "$SCROT_DIR/$scrot_file"
