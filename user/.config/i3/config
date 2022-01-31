@@ -210,8 +210,15 @@ client.unfocused #232323 #232323 #666666 #232323 #232323
 
 # Autostart
 
-## Autorand for multi-monitor autodetection
-exec_always --no-startup-id "autorandr --change"
+## Xrandr for multi-monitor autodetection
+exec_always --no-startup-id "killall picom"
+exec_always --no-startup-id "xrandr --output LVDS1 --auto --output VGA1 --preferred --right-of LVDS1"
+
+## Compositor
+exec_always --no-startup-id picom
+
+## Set wallpaper
+exec_always --no-startup-id "feh --no-fehbg --bg-fill $HOME/.config/bg"
 
 ## Polybar
 set $POLYBAR_HOME $HOME/.config/polybar
@@ -219,9 +226,6 @@ exec_always --no-startup-id "POLYBAR_HOME=$POLYBAR_HOME $POLYBAR_HOME/bin/launch
 
 ## Dunst
 exec_always --no-startup-id "killall dunst && /sbin/dunst --config $HOME/.config/dunst/dunstrc"
-
-## Set wallpaper
-exec_always --no-startup-id "feh --no-fehbg --bg-fill $HOME/.config/bg"
 
 ## Conky
 exec "cd $HOME/.config/conky; conky --config=conky.lua"
