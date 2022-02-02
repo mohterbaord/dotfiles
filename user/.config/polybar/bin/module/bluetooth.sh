@@ -2,9 +2,9 @@
 
 case "$1" in
   --toggle)
-    bluetooth toggle
+    bluepoop toggle
     ;;
   *)
-    bluetooth status
+    bluepoop status
     ;;
 esac

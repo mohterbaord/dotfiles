@@ -1,0 +1,24 @@
+global:
+  color:
+    black: '232323'
+    red: 'd75f5f'
+    green: '00af87'
+    brown: ''
+    blue: '87afff'
+    purple: ''
+    teal: ''
+    light_grey: ''
+    grey: '6c6c6c'
+    light_red: ''
+    light_green: ''
+    orange: 'ffaf87'
+    light_blue: ''
+    magenta: ''
+    cyan: ''
+    white: 'eeeeee'
+
+polybar:
+  path:
+    bin: '$POLYBAR_HOME/bin'
+    # TODO: use placeholders
+    include_conf: '/home/mohterbaord/.config/polybar/config/include'

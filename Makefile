@@ -3,7 +3,8 @@ all: polybar zsh i3 conky
 all-system: system-vconsole system-udev system-xorg
 
 polybar:
-	@(cd user/.config/polybar/; ./compile-bundle.sh)
+	@rm -rf bundle/user/.config/polybar
+	@./templater.sh --src=user/.config/polybar --dest=bundle/user --dest-prefix=.config/polybar --values=values.yml
 	@install --verbose --compare --directory \
 		$$HOME/.config/polybar \
 		$$HOME/.config/polybar/bin \
@@ -14,29 +15,29 @@ polybar:
 		$$HOME/.config/polybar/config/include/global \
 		$$HOME/.config/polybar/config/include/module
 	@install --verbose --compare --target-directory=$$HOME/.config/polybar/bin \
-		user/.config/polybar/dist/bin/launch.sh
+		bundle/user/.config/polybar/bin/launch.sh
 	@install --verbose --compare --target-directory=$$HOME/.config/polybar/bin/module \
-		user/.config/polybar/dist/bin/module/bluetooth.sh
+		bundle/user/.config/polybar/bin/module/bluetooth.sh
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/polybar/config \
-		user/.config/polybar/dist/config/config.ini
+		bundle/user/.config/polybar/config/config.ini
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/polybar/config/include \
-		user/.config/polybar/dist/config/include/colors.ini \
-		user/.config/polybar/dist/config/include/fonts.ini \
-		user/.config/polybar/dist/config/include/settings.ini
+		bundle/user/.config/polybar/config/include/colors.ini \
+		bundle/user/.config/polybar/config/include/fonts.ini \
+		bundle/user/.config/polybar/config/include/settings.ini
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/polybar/config/include/bar \
-		user/.config/polybar/dist/config/include/bar/status-bar.ini
+		bundle/user/.config/polybar/config/include/bar/status-bar.ini
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/polybar/config/include/global \
-		user/.config/polybar/dist/config/include/global/wm.ini
+		bundle/user/.config/polybar/config/include/global/wm.ini
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/polybar/config/include/module \
-		user/.config/polybar/dist/config/include/module/backlight.ini \
-		user/.config/polybar/dist/config/include/module/battery.ini \
-		user/.config/polybar/dist/config/include/module/bluetooth.ini \
-		user/.config/polybar/dist/config/include/module/date.ini \
-		user/.config/polybar/dist/config/include/module/eth.ini \
-		user/.config/polybar/dist/config/include/module/i3.ini \
-		user/.config/polybar/dist/config/include/module/pulseaudio.ini \
-		user/.config/polybar/dist/config/include/module/wlan.ini \
-		user/.config/polybar/dist/config/include/module/xkeyboard.ini
+		bundle/user/.config/polybar/config/include/module/backlight.ini \
+		bundle/user/.config/polybar/config/include/module/battery.ini \
+		bundle/user/.config/polybar/config/include/module/bluetooth.ini \
+		bundle/user/.config/polybar/config/include/module/date.ini \
+		bundle/user/.config/polybar/config/include/module/eth.ini \
+		bundle/user/.config/polybar/config/include/module/i3.ini \
+		bundle/user/.config/polybar/config/include/module/pulseaudio.ini \
+		bundle/user/.config/polybar/config/include/module/wlan.ini \
+		bundle/user/.config/polybar/config/include/module/xkeyboard.ini
 
 zsh:
 	@install --verbose --compare --directory \
