@@ -1,4 +1,4 @@
-all: polybar zsh i3 conky
+all: polybar zsh i3 conky dunst picom
 
 all-system: system-vconsole system-udev system-xorg
 
@@ -74,6 +74,18 @@ conky:
 		user/.config/conky/section_processes.lua \
 		user/.config/conky/section_time.lua \
 		user/.config/conky/section_usage.lua
+
+dunst:
+	@install --verbose --compare --directory \
+		$$HOME/.config/dunst
+	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/dunst \
+		user/.config/dunst/dunstrc
+
+picom:
+	@install --verbose --compare --directory \
+		$$HOME/.config/picom
+	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/picom \
+		user/.config/picom/picom.conf
 
 system-vconsole:
 	@install --verbose --compare --mode=644 --group=root --owner=root --target-directory=/etc \
