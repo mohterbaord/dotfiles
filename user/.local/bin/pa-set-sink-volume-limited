@@ -1,58 +1,85 @@
-#!/bin/sh
+#!/bin/zsh
 
-SINK=$1
+VOLUME_SUMMARY='__volume__'
 
-VOLUME=$(echo "$2" \
-  | grep --extended-regexp '^[+-]?[[:digit:]]+%$' \
-  | tr --delete '\n')
+SINK="$1"
 
-LIMIT=$(echo "$3" \
-  | grep --extended-regexp '^[[:digit:]]+$' \
-  | tr --delete '\n')
+VOLUME=$(echo -n "$2" | grep --extended-regexp '^[+-]?[[:digit:]]+%$')
+[ -z "$VOLUME" ] && exit 1
 
-if [ -z $VOLUME ] || [ -z $LIMIT ]; then
-  exit 0
-fi
+DOWN_LIMIT=0
+UP_LIMIT=$(( $3 ))
 
 #
 
-VOLUME_RAISE=$(echo $VOLUME \
-  | sed --regexp-extended 's/^(\+?).*/\1/' \
-  | tr --delete '\n')
+function get_current_volume() {
+  local current_volumes="$1"
 
-if [ -z $VOLUME_RAISE ]; then
-  pactl set-sink-volume "$SINK" $VOLUME
-  exit 0
-fi
+  local current_volume_left
+  current_volume_left=$(echo -n "$current_volumes" \
+    | sed --regexp-extended 's/^Volume:\s+front-left:\s+[[:digit:]]+\s+\/\s+([[:digit:]]+)%.*/\1/')
+  current_volume_left=$(( current_volume_left ))
+
+  local current_volume_right
+  current_volume_right=$(echo -n "$current_volumes" \
+    | sed --regexp-extended 's/.*\s+([[:digit:]]+)%\s+\/.*\s+dB\s*$/\1/')
+  current_volume_right=$(( current_volume_right ))
+
+  echo -n $(( current_volume_left > current_volume_right ? current_volume_left : current_volume_right ))
+}
+
+notify_volume() {
+  local volume_value=$(( $1 ))
+  dunstify --hints=int:value:$volume_value "$VOLUME_SUMMARY"
+}
+
+change_volume_and_notify() {
+  local sink="$1"
+  local new_volume_value=$(( $2 ))
+  pactl set-sink-volume "$sink" "$new_volume_value%"
+  notify_volume $new_volume_value
+}
+
+change_volume_limited() {
+  local sink="$1"
+  local volume_changed=$(( $2 ))
+  local volume_down_limit=$(( $3 ))
+  local volume_up_limit=$(( $4 ))
+
+  change_volume_and_notify "$sink" $(( volume_changed > volume_up_limit \
+    ? volume_up_limit \
+    : (volume_changed < volume_down_limit \
+      ? volume_down_limit \
+      : volume_changed) ))
+}
+
+main() {
+  local sink="$1"
+  local change_volume_at="$2"
+  local volume_down_limit=$(( $3 ))
+  local volume_up_limit=$(( $4 ))
+
+  local current_volumes
+  current_volumes=$(pactl get-sink-volume "$sink" | head --lines=1)
+
+  local current_volume
+  current_volume=$(get_current_volume "$current_volumes")
+  current_volume=$(( current_volume ))
+
+  local volume_changing
+  volume_changing=$(echo -n "$change_volume_at" | sed --regexp-extended 's/^([+-][[:digit:]]+)%$/\1/')
+  volume_changing=$(( volume_changing ))
+
+  local volume_changed
+  volume_changed=$(( current_volume + volume_changing ))
+
+  if (( volume_changed == current_volume )); then
+    notify_volume $current_volume
+  else
+    change_volume_limited "$sink" $volume_changed $volume_down_limit $volume_up_limit
+  fi
+}
 
 #
 
-CURRENT_VOLUMES=$(pactl get-sink-volume "$SINK" \
-  | head --lines=1 \
-  | tr --delete '\n')
-
-CURRENT_VOLUME_LEFT=$(echo "$CURRENT_VOLUMES" \
-  | sed --regexp-extended 's/^Volume:\s+front-left:\s+[[:digit:]]+\s+\/\s+([[:digit:]]+)%.*/\1/')
-
-CURRENT_VOLUME_RIGHT=$(echo "$CURRENT_VOLUMES" \
-  | sed --regexp-extended 's/.*\s+([[:digit:]]+)%\s+\/.*\s+dB\s*$/\1/')
-
-CURRENT_VOLUME=$(($CURRENT_VOLUME_LEFT > $CURRENT_VOLUME_RIGHT ? $CURRENT_VOLUME_LEFT : $CURRENT_VOLUME_RIGHT))
-
-if [ $CURRENT_VOLUME -eq $LIMIT ]; then
-  exit 0
-fi
-
-VOLUME_RAISING=$(echo $VOLUME \
-  | sed --regexp-extended 's/^\+(.*)%$/\1/' \
-  | tr --delete '\n')
-
-RAISED_VOLUME=$(($CURRENT_VOLUME + $VOLUME_RAISING))
-
-#
-
-if [ $RAISED_VOLUME -le $LIMIT ]; then
-  pactl set-sink-volume "$SINK" $VOLUME
-else
-  pactl set-sink-volume "$SINK" "$LIMIT%"
-fi
+main "$SINK" "$VOLUME" $DOWN_LIMIT $UP_LIMIT
