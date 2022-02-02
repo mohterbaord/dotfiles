@@ -18,7 +18,7 @@ conky.config = {
   draw_outline = false,
   draw_shades = false,
   extra_newline = false,
-  font = 'Cascadia Code:size=10',
+  font = '<% .global.font.monospaced %>:size=10',
   gap_x = 69,
   gap_y = 10,
   minimum_height = 5,

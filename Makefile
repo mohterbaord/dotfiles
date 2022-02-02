@@ -1,4 +1,4 @@
-all: polybar zsh i3 conky dunst picom
+all: polybar zsh i3 conky dunst picom alacritty
 
 all-system: system-vconsole system-udev system-xorg
 
@@ -64,16 +64,16 @@ i3:
 		user/.local/bin/scrotcrop
 
 conky:
-	@install --verbose --compare --directory \
-		$$HOME/.config/conky
+	@rm -rf bundle/user/.config/conky
+	@./templater.sh --src=user/.config/conky --dest=bundle/user --dest-prefix=.config/conky --values=values.yml
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/conky \
-		user/.config/conky/config.lua \
-		user/.config/conky/conky.lua \
-		user/.config/conky/format.lua \
-		user/.config/conky/section_network.lua \
-		user/.config/conky/section_processes.lua \
-		user/.config/conky/section_time.lua \
-		user/.config/conky/section_usage.lua
+		bundle/user/.config/conky/config.lua \
+		bundle/user/.config/conky/conky.lua \
+		bundle/user/.config/conky/format.lua \
+		bundle/user/.config/conky/section_network.lua \
+		bundle/user/.config/conky/section_processes.lua \
+		bundle/user/.config/conky/section_time.lua \
+		bundle/user/.config/conky/section_usage.lua
 
 dunst:
 	@install --verbose --compare --directory \
@@ -86,6 +86,14 @@ picom:
 		$$HOME/.config/picom
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/picom \
 		user/.config/picom/picom.conf
+
+alacritty:
+	@rm -rf bundle/user/.config/alacritty
+	@./templater.sh --src=user/.config/alacritty --dest=bundle/user --dest-prefix=.config/alacritty --values=values.yml
+	@install --verbose --compare --directory \
+		$$HOME/.config/alacritty
+	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/alacritty \
+		bundle/user/.config/alacritty/alacritty.yml
 
 system-vconsole:
 	@install --verbose --compare --mode=644 --group=root --owner=root --target-directory=/etc \

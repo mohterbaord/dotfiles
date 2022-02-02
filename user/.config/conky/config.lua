@@ -2,11 +2,11 @@ bar_height = 6
 bar_cpu_width = 184
 bar_fs_width = 72
 
-color_black = '232323'
-color_red = 'ff5f87'
-color_magenta = 'd787ff'
-color_grey = '6c6c6c'
-color_white = 'eeeeee'
+color_black = '<% .global.color.black %>'
+color_red = '<% .global.color.light_red %>'
+color_magenta = '<% .global.color.magenta %>'
+color_grey = '<% .global.color.grey %>'
+color_white = '<% .global.color.white %>'
 
 color_bg = color_black
 color_fg_primary = color_magenta

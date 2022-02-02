@@ -1,0 +1,31 @@
+selection:
+  save_to_clipboard: true
+cursor:
+  style:
+    shape: Beam
+font:
+  normal:
+    family: '<% .global.font.monospaced %>'
+  size: 8.5
+colors:
+  primary:
+    background: '#<% .global.color.bg %>'
+    foreground: '#<% .global.color.fg %>'
+  normal:
+    black: '#<% .global.color.black %>'
+    red: '#ff005f'
+    green: '#00af87'
+    yellow: '#ffaf87'
+    blue: '#0087ff'
+    magenta: '#<% .global.color.magenta %>'
+    cyan: '#87ffff'
+    white: '#<% .global.color.light_grey %>'
+  bright:
+    black: '#<% .global.color.grey %>'
+    red: '#<% .global.color.light_red %>'
+    green: '#00d7af'
+    yellow: '#ffdfaf'
+    blue: '#00afff'
+    magenta: '#dfafff'
+    cyan: '#afffff'
+    white: '#<% .global.color.white %>'

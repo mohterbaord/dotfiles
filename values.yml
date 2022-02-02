@@ -7,18 +7,26 @@ global:
     blue: '87afff'
     purple: ''
     teal: ''
-    light_grey: ''
+    light_grey: 'c0c0c0'
     grey: '6c6c6c'
-    light_red: ''
+    light_red: 'ff5f87'
     light_green: ''
     orange: 'ffaf87'
-    light_blue: ''
-    magenta: ''
+    light_blue: '87afff'
+    magenta: 'd787ff'
     cyan: ''
     white: 'eeeeee'
+
+    # TODO: use placeholder e.g. %{black}
+    bg: '232323'
+    # TODO: use placeholder e.g. %{light_grey}
+    fg: 'c0c0c0'
+
+  font:
+    monospaced: 'Cascadia Code'
 
 polybar:
   path:
     bin: '$POLYBAR_HOME/bin'
-    # TODO: use placeholders
+    # TODO: use placeholder e.g. '%{$HOME}/.config/polybar/config/include'
     include_conf: '/home/mohterbaord/.config/polybar/config/include'
