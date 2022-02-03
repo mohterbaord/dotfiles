@@ -2,6 +2,53 @@
 
 USAGE_MSG='Usage: templater --src=<file-or-dir> --dest=<file-or-dir> [--dest-prefix=<partial-path-dir>] --values=<file>'
 
+# TODO: make recursive
+function get_placeholder_substitution() {
+  local placeholder="$1"
+  local yaml_file="$2"
+  if [[ "$placeholder" == .* ]]; then
+    echo -n "$(yq -r "$placeholder" "$yaml_file")"
+  elif [[ "$placeholder" == \$* ]]; then
+    local variable_name
+    variable_name=$(echo -n "$placeholder" | sed --regexp-extended 's/^\$(.*)/\1/')
+    echo -n "$(printenv "$variable_name")"
+  else
+    # TODO: same scope key
+    echo
+  fi
+}
+
+function get_value_from_yaml() {
+  local key="$1"
+  local yaml_file="$2"
+
+  local raw_value
+  raw_value=$(yq -r "$key" "$yaml_file")
+
+  local substituted_value
+  substituted_value="$raw_value"
+
+  local yaml_placeholders
+  yaml_placeholders=$(echo -n "$raw_value" \
+    | grep --color=never --only-matching --extended-regexp '%\{\s*[A-Za-z0-9_\.\$]+\s*\}' \
+    | sed --regexp-extended 's/%\{\s*(.*)\s*\}/\1/')
+  local yaml_placeholder
+  echo "$yaml_placeholders" | while read -r yaml_placeholder; do
+    if [ -n "$yaml_placeholder" ]; then
+      local yaml_placeholder_escaped
+      yaml_placeholder_escaped="$(echo -n "$yaml_placeholder" | sed --regexp-extended 's/\$/\\\$/g')"
+
+      local final_value
+      final_value="$(get_placeholder_substitution "$yaml_placeholder" "$yaml_file")"
+
+      substituted_value=$(echo -n "$substituted_value" \
+        | sed --regexp-extended "s#%\\{\\s*$yaml_placeholder_escaped\\s*\\}#$final_value#g")
+    fi
+  done
+
+  echo -n "$substituted_value"
+}
+
 function err_param_required {
   local param="$1"
   echo -e "Parameter $param should be specified\n\n  $USAGE_MSG\n"
@@ -46,8 +93,12 @@ function substitute_in_place {
   echo "$value_occurrences" | while read -r value_occurrence; do
     if [ -n "$value_occurrence" ]; then
       local value
-      value=$(yq -r "$value_occurrence" "$values_file" | sed --regexp-extended 's#/#\\/#g')
-      sed --in-place --regexp-extended "s/<%\\s*${value_occurrence}\\s*%>/$value/g" "$template_file"
+      value="$(get_value_from_yaml "$value_occurrence" "$values_file")"
+
+      local value_escaped
+      value_escaped="$(echo -n "$value" | sed --regexp-extended 's#([/\$])#\\\1#g')"
+
+      sed --in-place --regexp-extended "s/<%\\s*${value_occurrence}\\s*%>/$value_escaped/g" "$template_file"
     fi
   done
 }

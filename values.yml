@@ -17,16 +17,15 @@ global:
     cyan: ''
     white: 'eeeeee'
 
-    # TODO: use placeholder e.g. %{black}
-    bg: '232323'
-    # TODO: use placeholder e.g. %{light_grey}
-    fg: 'c0c0c0'
+    bg: '%{ .global.color.black }'
+    fg: '%{ .global.color.light_grey }'
 
   font:
     monospaced: 'Cascadia Code'
 
 polybar:
   path:
+    # TODO: recursive substitution to use `%{ .polybar.path.home }`
+    home: '%{ $HOME }/.config/polybar'
     bin: '$POLYBAR_HOME/bin'
-    # TODO: use placeholder e.g. '%{$HOME}/.config/polybar/config/include'
-    include_conf: '/home/mohterbaord/.config/polybar/config/include'
+    include_conf: '%{ $HOME }/.config/polybar/config/include'
