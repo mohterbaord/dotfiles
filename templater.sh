@@ -2,7 +2,6 @@
 
 USAGE_MSG='Usage: templater --src=<file-or-dir> --dest=<file-or-dir> [--dest-prefix=<partial-path-dir>] --values=<file>'
 
-# TODO: make recursive
 function get_placeholder_substitution() {
   local placeholder="$1"
   local yaml_file="$2"
@@ -18,6 +17,52 @@ function get_placeholder_substitution() {
   fi
 }
 
+function find_placeholders_in_value() {
+  local value="$1"
+  echo -n "$value" \
+    | grep --color=never --only-matching --extended-regexp '%\{\s*[A-Za-z0-9_\.\$]+\s*\}' \
+    | sed --regexp-extended 's/%\{\s*(.*)\s*\}/\1/'
+}
+
+function substitute_placeholder_in_all_places() {
+  local value="$1"
+  local placeholder="$2"
+  local yaml_file="$3"
+
+  local placeholder_escaped
+  placeholder_escaped="$(echo -n "$placeholder" | sed --regexp-extended 's/\$/\\\$/g')"
+
+  local final_value
+  final_value="$(get_placeholder_substitution "$placeholder" "$yaml_file")"
+
+  echo -n "$value" \
+    | sed --regexp-extended "s#%\\{\\s*$placeholder_escaped\\s*\\}#$final_value#g"
+}
+
+function get_value_substituted() {
+  local raw_value_orig="$1"
+  local raw_value="$2"
+  local yaml_file="$3"
+
+  local yaml_placeholders
+  yaml_placeholders="$(find_placeholders_in_value "$raw_value")"
+  if [ -z "$yaml_placeholders" ]; then
+    echo -n "$raw_value"
+  else
+    local raw_value_next
+    local yaml_placeholder
+    echo "$yaml_placeholders" | while read -r yaml_placeholder; do
+      if [ -n "$yaml_placeholder" ]; then
+        raw_value_next="$(substitute_placeholder_in_all_places "$raw_value" "$yaml_placeholder" "$yaml_file")"
+        if [ "$raw_value_next" = "$raw_value_orig" ]; then
+          exit 1
+        fi
+      fi
+    done
+    get_value_substituted "$raw_value" "$raw_value_next" "$yaml_file"
+  fi
+}
+
 function get_value_from_yaml() {
   local key="$1"
   local yaml_file="$2"
@@ -25,28 +70,7 @@ function get_value_from_yaml() {
   local raw_value
   raw_value=$(yq -r "$key" "$yaml_file")
 
-  local substituted_value
-  substituted_value="$raw_value"
-
-  local yaml_placeholders
-  yaml_placeholders=$(echo -n "$raw_value" \
-    | grep --color=never --only-matching --extended-regexp '%\{\s*[A-Za-z0-9_\.\$]+\s*\}' \
-    | sed --regexp-extended 's/%\{\s*(.*)\s*\}/\1/')
-  local yaml_placeholder
-  echo "$yaml_placeholders" | while read -r yaml_placeholder; do
-    if [ -n "$yaml_placeholder" ]; then
-      local yaml_placeholder_escaped
-      yaml_placeholder_escaped="$(echo -n "$yaml_placeholder" | sed --regexp-extended 's/\$/\\\$/g')"
-
-      local final_value
-      final_value="$(get_placeholder_substitution "$yaml_placeholder" "$yaml_file")"
-
-      substituted_value=$(echo -n "$substituted_value" \
-        | sed --regexp-extended "s#%\\{\\s*$yaml_placeholder_escaped\\s*\\}#$final_value#g")
-    fi
-  done
-
-  echo -n "$substituted_value"
+  get_value_substituted "$raw_value" "$raw_value" "$yaml_file"
 }
 
 function err_param_required {
@@ -194,45 +218,49 @@ function compile_bundle_from_template {
   fi
 }
 
-for arg in "$@"; do
-  case $arg in
-    --src=*)
-      SRC="${arg#*=}"
-      shift
-      ;;
-    --dest=*)
-      DEST="${arg#*=}"
-      shift
-      ;;
-    --values=*)
-      VALUES="${arg#*=}"
-      shift
-      ;;
-    --dest-prefix=*)
-      DEST_PREFIX="${arg#*=}"
-      shift
-      ;;
-    *)
-      err_param_unknown "$arg"
-      exit 1
-      ;;
-  esac
-done
-unset arg
+main() {
+  for arg in "$@"; do
+    case $arg in
+      --src=*)
+        SRC="${arg#*=}"
+        shift
+        ;;
+      --dest=*)
+        DEST="${arg#*=}"
+        shift
+        ;;
+      --values=*)
+        VALUES="${arg#*=}"
+        shift
+        ;;
+      --dest-prefix=*)
+        DEST_PREFIX="${arg#*=}"
+        shift
+        ;;
+      *)
+        err_param_unknown "$arg"
+        exit 1
+        ;;
+    esac
+  done
+  unset arg
 
-if [ -z "$SRC" ]; then
-  err_param_required '--src'
-  exit 1
-fi
+  if [ -z "$SRC" ]; then
+    err_param_required '--src'
+    exit 1
+  fi
 
-if [ -z "$DEST" ]; then
-  err_param_required '--dest'
-  exit 1
-fi
+  if [ -z "$DEST" ]; then
+    err_param_required '--dest'
+    exit 1
+  fi
 
-if [ -z "$VALUES" ]; then
-  err_param_required '--values'
-  exit 1
-fi
+  if [ -z "$VALUES" ]; then
+    err_param_required '--values'
+    exit 1
+  fi
 
-compile_bundle_from_template "$SRC" "$DEST" "$VALUES" "$DEST_PREFIX"
+  compile_bundle_from_template "$SRC" "$DEST" "$VALUES" "$DEST_PREFIX"
+}
+
+main "$@"

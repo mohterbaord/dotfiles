@@ -25,7 +25,6 @@ global:
 
 polybar:
   path:
-    # TODO: recursive substitution to use `%{ .polybar.path.home }`
     home: '%{ $HOME }/.config/polybar'
     bin: '$POLYBAR_HOME/bin'
-    include_conf: '%{ $HOME }/.config/polybar/config/include'
+    include_conf: '%{ .polybar.path.home }/config/include'
