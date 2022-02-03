@@ -129,9 +129,9 @@ workspace $ws3 output $lvds
 workspace $ws4 output $vga
 workspace $ws5 output $lvds
 workspace $ws6 output $vga
-workspace $ws7 output $lvds
+workspace $ws7 output $vga
 workspace $ws8 output $vga
-workspace $ws9 output $lvds
+workspace $ws9 output $vga
 workspace $ws10 output $vga
 
 # reload the configuration file
@@ -199,7 +199,7 @@ for_window [class="firefox"] move to workspace $ws2, workspace --no-auto-back-an
 for_window [class="Spotify"] move to workspace $ws10, workspace --no-auto-back-and-forth 
 
 ## Telegram
-for_window [class="TelegramDesktop"] move to workspace $ws7, workspace --no-auto-back-and-forth
+for_window [class="TelegramDesktop"] move to workspace $ws5, workspace --no-auto-back-and-forth
 
 
 # Colors
