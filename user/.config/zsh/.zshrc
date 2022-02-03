@@ -34,7 +34,7 @@ alias lal='ls -lah'
 alias firefox='firefox --MOZ_LOG_FILE=/tmp/firefox.log'
 
 # Prompts
-PS1="%F{13}%n%f%F{10}@%m%f%F{13}:%f%F{yellow}%~%f"$'\n'"%F{13}$%f "
+PS1="%(!.%F{9}%n%f.%F{13}%n%f)%F{10}@%m%f%(!.%F{9}:%f.%F{13}:%f)%F{yellow}%~%f"$'\n'"%(!.%F{9}#%f.%F{13}$%f) "
 
 # Bindkeys
 
