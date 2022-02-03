@@ -2,42 +2,41 @@ all: polybar zsh i3 conky dunst picom alacritty
 
 all-system: system-vconsole system-udev system-xorg
 
+clean:
+	@rm -rf bundle
+
 polybar:
-	@rm -rf bundle/user/.config/polybar
-	@./templater.sh --src=user/.config/polybar --dest=bundle/user --dest-prefix=.config/polybar --values=values.yml
+	@rm -rf bundle/user/polybar
+	@./templater.sh --src=user/.config/polybar --dest=bundle/user/polybar --dest-prefix=.config/polybar --values=values.yml
 	@install --verbose --compare --directory \
-		$$HOME/.config/polybar \
-		$$HOME/.config/polybar/bin \
 		$$HOME/.config/polybar/bin/module \
-		$$HOME/.config/polybar/config \
-		$$HOME/.config/polybar/config/include \
 		$$HOME/.config/polybar/config/include/bar \
 		$$HOME/.config/polybar/config/include/global \
 		$$HOME/.config/polybar/config/include/module
 	@install --verbose --compare --target-directory=$$HOME/.config/polybar/bin \
-		bundle/user/.config/polybar/bin/launch.sh
+		bundle/user/polybar/.config/polybar/bin/launch.sh
 	@install --verbose --compare --target-directory=$$HOME/.config/polybar/bin/module \
-		bundle/user/.config/polybar/bin/module/bluetooth.sh
+		bundle/user/polybar/.config/polybar/bin/module/bluetooth.sh
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/polybar/config \
-		bundle/user/.config/polybar/config/config.ini
+		bundle/user/polybar/.config/polybar/config/config.ini
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/polybar/config/include \
-		bundle/user/.config/polybar/config/include/colors.ini \
-		bundle/user/.config/polybar/config/include/fonts.ini \
-		bundle/user/.config/polybar/config/include/settings.ini
+		bundle/user/polybar/.config/polybar/config/include/colors.ini \
+		bundle/user/polybar/.config/polybar/config/include/fonts.ini \
+		bundle/user/polybar/.config/polybar/config/include/settings.ini
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/polybar/config/include/bar \
-		bundle/user/.config/polybar/config/include/bar/status-bar.ini
+		bundle/user/polybar/.config/polybar/config/include/bar/status-bar.ini
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/polybar/config/include/global \
-		bundle/user/.config/polybar/config/include/global/wm.ini
+		bundle/user/polybar/.config/polybar/config/include/global/wm.ini
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/polybar/config/include/module \
-		bundle/user/.config/polybar/config/include/module/backlight.ini \
-		bundle/user/.config/polybar/config/include/module/battery.ini \
-		bundle/user/.config/polybar/config/include/module/bluetooth.ini \
-		bundle/user/.config/polybar/config/include/module/date.ini \
-		bundle/user/.config/polybar/config/include/module/eth.ini \
-		bundle/user/.config/polybar/config/include/module/i3.ini \
-		bundle/user/.config/polybar/config/include/module/pulseaudio.ini \
-		bundle/user/.config/polybar/config/include/module/wlan.ini \
-		bundle/user/.config/polybar/config/include/module/xkeyboard.ini
+		bundle/user/polybar/.config/polybar/config/include/module/backlight.ini \
+		bundle/user/polybar/.config/polybar/config/include/module/battery.ini \
+		bundle/user/polybar/.config/polybar/config/include/module/bluetooth.ini \
+		bundle/user/polybar/.config/polybar/config/include/module/date.ini \
+		bundle/user/polybar/.config/polybar/config/include/module/eth.ini \
+		bundle/user/polybar/.config/polybar/config/include/module/i3.ini \
+		bundle/user/polybar/.config/polybar/config/include/module/pulseaudio.ini \
+		bundle/user/polybar/.config/polybar/config/include/module/wlan.ini \
+		bundle/user/polybar/.config/polybar/config/include/module/xkeyboard.ini
 
 zsh:
 	@install --verbose --compare --directory \
@@ -64,16 +63,16 @@ i3:
 		user/.local/bin/scrotcrop
 
 conky:
-	@rm -rf bundle/user/.config/conky
-	@./templater.sh --src=user/.config/conky --dest=bundle/user --dest-prefix=.config/conky --values=values.yml
+	@rm -rf bundle/user/conky
+	@./templater.sh --src=user/.config/conky --dest=bundle/user/conky --dest-prefix=.config/conky --values=values.yml
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/conky \
-		bundle/user/.config/conky/config.lua \
-		bundle/user/.config/conky/conky.lua \
-		bundle/user/.config/conky/format.lua \
-		bundle/user/.config/conky/section_network.lua \
-		bundle/user/.config/conky/section_processes.lua \
-		bundle/user/.config/conky/section_time.lua \
-		bundle/user/.config/conky/section_usage.lua
+		bundle/user/conky/.config/conky/config.lua \
+		bundle/user/conky/.config/conky/conky.lua \
+		bundle/user/conky/.config/conky/format.lua \
+		bundle/user/conky/.config/conky/section_network.lua \
+		bundle/user/conky/.config/conky/section_processes.lua \
+		bundle/user/conky/.config/conky/section_time.lua \
+		bundle/user/conky/.config/conky/section_usage.lua
 
 dunst:
 	@install --verbose --compare --directory \
@@ -88,12 +87,12 @@ picom:
 		user/.config/picom/picom.conf
 
 alacritty:
-	@rm -rf bundle/user/.config/alacritty
-	@./templater.sh --src=user/.config/alacritty --dest=bundle/user --dest-prefix=.config/alacritty --values=values.yml
+	@rm -rf bundle/user/alacritty
+	@./templater.sh --src=user/.config/alacritty --dest=bundle/user/alacritty --dest-prefix=.config/alacritty --values=values.yml
 	@install --verbose --compare --directory \
 		$$HOME/.config/alacritty
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/alacritty \
-		bundle/user/.config/alacritty/alacritty.yml
+		bundle/user/alacritty/.config/alacritty/alacritty.yml
 
 system-vconsole:
 	@install --verbose --compare --mode=644 --group=root --owner=root --target-directory=/etc \
