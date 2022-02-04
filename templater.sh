@@ -1,6 +1,39 @@
 #!/bin/zsh
 
+
 USAGE_MSG='Usage: templater --src=<file-or-dir> --dest=<file-or-dir> [--dest-prefix=<partial-path-dir>] --values=<file>'
+
+PATTERN_IDENTIFIER='[A-Za-z_][A-Za-z_0-9]*'
+PATTERN_IDENTIFIER_ENV_VAR="$( printf '\$%s' "$PATTERN_IDENTIFIER" )"
+PATTERN_IDENTIFIER_YAML_KEY="$( printf '\.?%s((\.%s)*)' "$PATTERN_IDENTIFIER" "$PATTERN_IDENTIFIER" )"
+
+PATTERN_PLACEHOLDER_VALUES='%%\{\s*%s\s*\}'
+PATTERN_PLACEHOLDER_VALUES_KEY="$( printf '(%s|%s)' "$PATTERN_IDENTIFIER_ENV_VAR" "$PATTERN_IDENTIFIER_YAML_KEY" )"
+
+PATTERN_PLACEHOLDER_TEMPLATER='<%%\s*%s\s*%%>'
+PATTERN_PLACEHOLDER_TEMPLATER_KEY="$( printf '((\.%s)+)' "$PATTERN_IDENTIFIER" )"
+
+
+# Returns unique placeholder contents of passed value as a sequence that can be processed in while loop.
+#
+# Examples:
+#   - '%{ $HOME }/.config/%{ .path.log_dir }/yet-again/%{ .path.log_dir }' -> '$HOME' '.path.log_dir'
+#   - '#%{ black }' -> 'black'
+#
+function find_placeholder_contents_in_value() {
+  local value="$1"
+
+  local pattern_placeholder
+  pattern_placeholder="$( printf "$PATTERN_PLACEHOLDER_VALUES" "$PATTERN_PLACEHOLDER_VALUES_KEY" )"
+
+  local pattern_placeholder_content
+  pattern_placeholder_content="$( printf "$PATTERN_PLACEHOLDER_VALUES" '(.*)' )"
+
+  echo -n "$value" \
+    | grep --color=never --only-matching --extended-regexp "$pattern_placeholder" \
+    | sed --regexp-extended "s/$pattern_placeholder_content/\\1/" \
+    | uniq
+}
 
 function get_placeholder_substitution() {
   local placeholder="$1"
@@ -15,13 +48,6 @@ function get_placeholder_substitution() {
     # TODO: same scope key
     echo
   fi
-}
-
-function find_placeholders_in_value() {
-  local value="$1"
-  echo -n "$value" \
-    | grep --color=never --only-matching --extended-regexp '%\{\s*[A-Za-z0-9_\.\$]+\s*\}' \
-    | sed --regexp-extended 's/%\{\s*(.*)\s*\}/\1/'
 }
 
 function substitute_placeholder_in_all_places() {
@@ -45,7 +71,7 @@ function get_value_substituted() {
   local yaml_file="$3"
 
   local yaml_placeholders
-  yaml_placeholders="$(find_placeholders_in_value "$raw_value")"
+  yaml_placeholders="$(find_placeholder_contents_in_value "$raw_value")"
   if [ -z "$yaml_placeholders" ]; then
     echo -n "$raw_value"
   else
@@ -108,10 +134,15 @@ function substitute_in_place {
     exit 1
   fi
 
+  local pattern_placeholder
+  pattern_placeholder="$( printf "$PATTERN_PLACEHOLDER_TEMPLATER" "$PATTERN_PLACEHOLDER_TEMPLATER_KEY" )"
+
+  local pattern_placeholder_content
+  pattern_placeholder_content="$( printf "$PATTERN_PLACEHOLDER_TEMPLATER" '(.*)' )"
+
   local value_occurrences
-  value_occurrences=$(grep --color=never --only-matching --extended-regexp \
-    '<%\s*([A-Za-z0-9_\.]+)\s*%>' "$template_file" \
-    | sed --regexp-extended 's/<%\s*(.*)\s*%>/\1/' \
+  value_occurrences=$(grep --color=never --only-matching --extended-regexp "$pattern_placeholder" "$template_file" \
+    | sed --regexp-extended "s/$pattern_placeholder_content/\\1/" \
     | uniq)
   local value_occurrence
   echo "$value_occurrences" | while read -r value_occurrence; do
@@ -264,3 +295,5 @@ main() {
 }
 
 main "$@"
+
+#find_placeholder_contents_in_value '%{ $HOME }/.config/%{ .path.log }'
