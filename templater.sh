@@ -39,15 +39,20 @@ function get_placeholder_substitution() {
   local placeholder="$1"
   local yaml_file="$2"
   if [[ "$placeholder" == .* ]]; then
-    echo -n "$(yq -r "$placeholder" "$yaml_file")"
+    echo -n "$( yq -r "$placeholder" "$yaml_file" )"
   elif [[ "$placeholder" == \$* ]]; then
     local variable_name
-    variable_name=$(echo -n "$placeholder" | sed --regexp-extended 's/^\$(.*)/\1/')
-    echo -n "$(printenv "$variable_name")"
+    variable_name="$( echo -n "$placeholder" | sed --regexp-extended 's/^\$(.*)/\1/' )"
+    echo -n "$( printenv "$variable_name" )"
   else
     # TODO: same scope key
     echo
   fi
+}
+
+function escape_for_sed() {
+  local value="$1"
+  echo -n "$value" | sed --regexp-extended 's/([\\\/\^\$])/\\\1/g'
 }
 
 function substitute_placeholder_in_all_places() {
@@ -56,22 +61,44 @@ function substitute_placeholder_in_all_places() {
   local yaml_file="$3"
 
   local placeholder_escaped
-  placeholder_escaped="$(echo -n "$placeholder" | sed --regexp-extended 's/\$/\\\$/g')"
+  placeholder_escaped="$( escape_for_sed "$placeholder" )"
+
+  local pattern_placeholder_escaped
+  pattern_placeholder_escaped="$( printf "$PATTERN_PLACEHOLDER_VALUES" "$placeholder_escaped" )"
 
   local final_value
-  final_value="$(get_placeholder_substitution "$placeholder" "$yaml_file")"
+  final_value="$( get_placeholder_substitution "$placeholder" "$yaml_file" )"
+
+  local final_value_escaped
+  final_value_escaped="$( escape_for_sed "$final_value" )"
 
   echo -n "$value" \
-    | sed --regexp-extended "s#%\\{\\s*$placeholder_escaped\\s*\\}#$final_value#g"
+    | sed --regexp-extended "s/$pattern_placeholder_escaped/$final_value_escaped/g"
 }
 
+
+# Wrong usage examples:
+#
+#   * ```yaml
+#
+#     key: '%{ .key }'
+#
+#   ``` -> error (self reference)
+#
+#   * ```yaml
+#
+#     key_a: '%{ .key_b }'
+#     key_b: '%{ .key_a }'
+#
+#   ``` -> error (cyclic reference)
+#
 function get_value_substituted() {
   local raw_value_orig="$1"
   local raw_value="$2"
   local yaml_file="$3"
 
   local yaml_placeholders
-  yaml_placeholders="$(find_placeholder_contents_in_value "$raw_value")"
+  yaml_placeholders="$( find_placeholder_contents_in_value "$raw_value" )"
   if [ -z "$yaml_placeholders" ]; then
     echo -n "$raw_value"
   else
@@ -79,7 +106,7 @@ function get_value_substituted() {
     local yaml_placeholder
     echo "$yaml_placeholders" | while read -r yaml_placeholder; do
       if [ -n "$yaml_placeholder" ]; then
-        raw_value_next="$(substitute_placeholder_in_all_places "$raw_value" "$yaml_placeholder" "$yaml_file")"
+        raw_value_next="$( substitute_placeholder_in_all_places "$raw_value" "$yaml_placeholder" "$yaml_file" )"
         if [ "$raw_value_next" = "$raw_value_orig" ]; then
           exit 1
         fi
@@ -94,7 +121,7 @@ function get_value_from_yaml() {
   local yaml_file="$2"
 
   local raw_value
-  raw_value=$(yq -r "$key" "$yaml_file")
+  raw_value="$( yq -r "$key" "$yaml_file" )"
 
   get_value_substituted "$raw_value" "$raw_value" "$yaml_file"
 }
@@ -141,19 +168,22 @@ function substitute_in_place {
   pattern_placeholder_content="$( printf "$PATTERN_PLACEHOLDER_TEMPLATER" '(.*)' )"
 
   local value_occurrences
-  value_occurrences=$(grep --color=never --only-matching --extended-regexp "$pattern_placeholder" "$template_file" \
+  value_occurrences="$( grep --color=never --only-matching --extended-regexp "$pattern_placeholder" "$template_file" \
     | sed --regexp-extended "s/$pattern_placeholder_content/\\1/" \
-    | uniq)
+    | uniq )"
   local value_occurrence
   echo "$value_occurrences" | while read -r value_occurrence; do
     if [ -n "$value_occurrence" ]; then
+      local pattern_placeholder_content
+      pattern_placeholder_content="$( printf "$PATTERN_PLACEHOLDER_TEMPLATER" "$value_occurrence" )"
+
       local value
-      value="$(get_value_from_yaml "$value_occurrence" "$values_file")"
+      value="$( get_value_from_yaml "$value_occurrence" "$values_file" )"
 
       local value_escaped
-      value_escaped="$(echo -n "$value" | sed --regexp-extended 's#([/\$])#\\\1#g')"
+      value_escaped="$( escape_for_sed "$value" )"
 
-      sed --in-place --regexp-extended "s/<%\\s*${value_occurrence}\\s*%>/$value_escaped/g" "$template_file"
+      sed --in-place --regexp-extended "s/$pattern_placeholder_content/$value_escaped/g" "$template_file"
     fi
   done
 }
@@ -166,9 +196,9 @@ function resolve_template_from_file_to_dir {
   mkdir --verbose --parents "$dest_dir"
   cp "$src_file" "$dest_dir"
   local filename
-  filename=$(basename "$src_file")
+  filename="$( basename "$src_file" )"
   local bundle_copy
-  bundle_copy=$(concat_paths_and_clean "$dest_dir" "$filename")
+  bundle_copy="$( concat_paths_and_clean "$dest_dir" "$filename" )"
   substitute_in_place "$bundle_copy" "$values"
 }
 
@@ -178,7 +208,7 @@ function resolve_template_from_file_to_file {
   local values="$3"
 
   local parents
-  parents=$(dirname "$dest_file")
+  parents="$( dirname "$dest_file" )"
   mkdir --verbose --parents "$parents"
   cp --no-target-directory "$src_file" "$dest_file"
   substitute_in_place "$dest_file" "$values"
@@ -186,28 +216,28 @@ function resolve_template_from_file_to_file {
 
 function resolve_template_from_dir_to_dir {
   local src_dir
-  src_dir=$(concat_paths_and_clean "$1" '')
+  src_dir="$( concat_paths_and_clean "$1" '' )"
   local dest_dir
-  dest_dir=$(concat_paths_and_clean "$2" '')
+  dest_dir="$( concat_paths_and_clean "$2" '' )"
   local values="$3"
 
   # create bundle dirs
   local template_dir
-  for template_dir in $(find "$src_dir" -type d | sed --regexp-extended 's#(.*)#\1/#'); do
+  find "$src_dir" -type d | sed --regexp-extended 's#(.*)#\1/#' | while read -r template_dir; do
     local unprefixed_src_dir
-    unprefixed_src_dir=$(echo -n "$template_dir" | sed --regexp-extended "s#^$src_dir(.*)#\1#")
+    unprefixed_src_dir="$( echo -n "$template_dir" | sed --regexp-extended "s#^$src_dir(.*)#\1#" )"
     local dest_subdir
-    dest_subdir=$(concat_paths_and_clean "$dest_dir" "$unprefixed_src_dir")
+    dest_subdir="$( concat_paths_and_clean "$dest_dir" "$unprefixed_src_dir" )"
     mkdir --verbose --parents "$dest_subdir"
   done
 
   # create bundle files resolved
   local template_file
-  for template_file in $(find "$src_dir" -type f); do
+  find "$src_dir" -type f | while read -r template_file; do
     local unprefixed_src_file
-    unprefixed_src_file=$(echo -n "$template_file" | sed --regexp-extended "s#^$src_dir(.*)#\1#")
+    unprefixed_src_file="$( echo -n "$template_file" | sed --regexp-extended "s#^$src_dir(.*)#\1#" )"
     local dest_file
-    dest_file=$(concat_paths_and_clean "$dest_dir" "$unprefixed_src_file")
+    dest_file="$( concat_paths_and_clean "$dest_dir" "$unprefixed_src_file" )"
     resolve_template_from_file_to_file "$template_file" "$dest_file" "$values"
   done
 }
@@ -220,11 +250,11 @@ function resolve_template {
 
   if [ -n "$dest_prefix" ]; then
     local dest_dir
-    dest_dir=$(concat_paths_and_clean "$dest_file_or_dir" "$dest_prefix")
+    dest_dir="$( concat_paths_and_clean "$dest_file_or_dir" "$dest_prefix" )"
     resolve_template_from_file_to_dir "$src_file" "$dest_dir" "$values"
   elif [[ "$dest_file_or_dir" == */ ]]; then
     local dest_dir
-    dest_dir=$(concat_paths_and_clean "$dest_file_or_dir" '')
+    dest_dir="$( concat_paths_and_clean "$dest_file_or_dir" '' )"
     resolve_template_from_file_to_dir "$src_file" "$dest_dir" "$values"
   else
     resolve_template_from_file_to_file "$src_file" "$dest_file_or_dir" "$values"
@@ -239,7 +269,7 @@ function compile_bundle_from_template {
 
   if [ -d "$src" ]; then
     local dest_dir
-    dest_dir=$(concat_paths_and_clean "$dest" "$dest_prefix")
+    dest_dir="$( concat_paths_and_clean "$dest" "$dest_prefix" )"
     resolve_template_from_dir_to_dir "$src" "$dest_dir" "$values"
   elif [ -f "$src" ]; then
     resolve_template "$src" "$dest" "$values" "$dest_prefix"
@@ -295,5 +325,3 @@ main() {
 }
 
 main "$@"
-
-#find_placeholder_contents_in_value '%{ $HOME }/.config/%{ .path.log }'
