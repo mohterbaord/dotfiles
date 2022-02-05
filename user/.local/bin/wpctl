@@ -5,17 +5,17 @@ WALLPAPER_PATH="$HOME/.config/bg"
 
 function err_param_unknown() {
   local param="$1"
-  echo -e "Unknown parameter: $param\n\n  $USAGE_MSG\n"
+  echo -e "Unknown parameter: $param\n\n$USAGE_MSG\n"
 }
 
 function err_param_not_specified() {
   local param="$1"
-  echo -e "Parameter $param should be specified with a value: $param=<value> or $param <value>\n\n  $USAGE_MSG\n"
+  echo -e "Parameter $param should be specified with a value: $param=<value> or $param <value>\n\n$USAGE_MSG\n"
 }
 
 function err_no_bg_found {
-  local not_found_src="$1"
-  echo -e "Source file or directory was not found: $not_found_src\n\n  $USAGE_MSG\n"
+  local not_found_bg="$1"
+  echo -e "Image file was not found: $not_found_bg\n\n$USAGE_MSG\n"
 }
 
 reload_bg() {
