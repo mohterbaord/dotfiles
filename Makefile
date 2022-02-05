@@ -60,7 +60,8 @@ i3:
 		user/.local/bin/bluepoop \
 		user/.local/bin/pa-set-sink-volume-limited \
 		user/.local/bin/playerctl \
-		user/.local/bin/scrotcrop
+		user/.local/bin/scrotcrop \
+		user/.local/bin/wpctl
 
 conky:
 	@rm -rf bundle/user/conky

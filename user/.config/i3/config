@@ -217,7 +217,7 @@ exec_always --no-startup-id "xrandr --output LVDS1 --auto --output VGA1 --prefer
 exec_always --no-startup-id picom
 
 ## Set wallpaper
-exec_always --no-startup-id "feh --no-fehbg --bg-fill $HOME/.config/bg"
+exec_always --no-startup-id "wpctl --reload"
 
 ## Polybar
 set $POLYBAR_HOME $HOME/.config/polybar

@@ -1,0 +1,74 @@
+#!/bin/zsh
+
+USAGE_MSG='Usage: wpctl --wallpaper=<file> --reload\n       wpctl --wallpaper=<file>\n       wpctl --reload'
+WALLPAPER_PATH="$HOME/.config/bg"
+
+function err_param_unknown() {
+  local param="$1"
+  echo -e "Unknown parameter: $param\n\n  $USAGE_MSG\n"
+}
+
+function err_param_not_specified() {
+  local param="$1"
+  echo -e "Parameter $param should be specified with a value: $param=<value> or $param <value>\n\n  $USAGE_MSG\n"
+}
+
+function err_no_bg_found {
+  local not_found_src="$1"
+  echo -e "Source file or directory was not found: $not_found_src\n\n  $USAGE_MSG\n"
+}
+
+reload_bg() {
+  feh --no-fehbg --bg-fill "$WALLPAPER_PATH"
+}
+
+set_wallpaper() {
+  local wallpaper_path
+  wallpaper_path="$( realpath "$1")"
+  if [ ! -f "$wallpaper_path" ]; then
+    err_no_bg_found "$wallpaper_path"
+    exit 1
+  fi
+  ln --force --symbolic "$wallpaper_path" "$WALLPAPER_PATH"
+}
+
+main() {
+  if [ $# -eq 0 ]; then
+    echo -e "$USAGE_MSG"
+    exit 0
+  fi
+
+  local wallpaper_path
+  local reload_background
+
+  local arg
+  while [ $# -gt 0 ]; do arg="$1"
+    if [[ $arg == *"--reload"* ]]; then
+      reload_background=true
+      shift
+    elif [[ $arg == *"--wallpaper="* ]]; then
+      wallpaper_path="${arg#*=}"
+      shift
+    elif [[ $arg == *"--wallpaper"* ]]; then
+      if [ -z "$2" ]; then
+        err_param_not_specified "$arg"
+        exit 1
+      fi
+      wallpaper_path="$2"
+      shift 2
+    else
+      err_param_unknown "$arg"
+      exit 1
+    fi
+  done
+
+  if [ -n "$wallpaper_path" ]; then
+    set_wallpaper "$wallpaper_path"
+  fi
+
+  if [ -n "$reload_background" ]; then
+    reload_bg
+  fi
+}
+
+main "$@"
