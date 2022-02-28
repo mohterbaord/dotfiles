@@ -1,0 +1,106 @@
+#!/bin/zsh
+
+VSCODE_HOME='/opt/microsoft/vscode'
+BIN_HOME='/usr/local/bin'
+OS_NAME='linux-x64'
+DOWNLOAD_URL="https://code.visualstudio.com/sha/download?build=stable&os=$OS_NAME"
+
+download_tarball() {
+  local output_filename="$1"
+  local download_url="$2"
+  curl --location --write-out '%{url_effective}' --output "$output_filename" "$download_url"
+}
+
+extract_tarball() {
+  local output_filename="$1"
+  local extract_dir="$2"
+  tar --extract --gzip --verbose --file="$output_filename" --directory="$extract_dir"
+}
+
+function get_version() {
+  local vscode_bundle_dir="$1"
+  echo -n "$( jq -r .version "$vscode_bundle_dir/resources/app/package.json" )"
+}
+
+function compare_versions() {
+  local version_template
+  version_template='([[:digit:]]+).([[:digit:]]+).([[:digit:]]+)'
+
+  function _compare_versions() {
+    local left="$1"
+    local right="$2"
+    local group=$(( $3 ))
+
+    local l
+    l="$( echo -n "$left" | sed --regexp-extended "s/^$version_template\$/\\$group/" )"
+    local r
+    r="$( echo -n "$right" | sed --regexp-extended "s/^$version_template\$/\\$group/" )"
+    if (( l < r )); then
+      echo -n -1
+    elif (( l > r )); then
+      echo -n 1
+    elif (( group >= 3 )); then
+      echo -n 0
+    else
+      _compare_versions "$left" "$right" $(( group + 1 ))
+    fi
+  }
+
+  _compare_versions "$1" "$2" 1
+}
+
+install_vscode() {
+  local extract_dir="$1"
+  local vscode_dir="$2"
+
+  install --verbose --compare --directory "$VSCODE_HOME"
+  cp --recursive "$extract_dir/$vscode_dir" "$VSCODE_HOME"
+  chown --recursive root:root "$VSCODE_HOME/$vscode_dir"
+  ln --force --symbolic "$VSCODE_HOME/$vscode_dir" "$VSCODE_HOME/current"
+  ln --force --symbolic "$VSCODE_HOME/current/code" "$BIN_HOME/vscode"
+  ln --force --symbolic "$BIN_HOME/vscode" "$BIN_HOME/code"
+}
+
+main() {
+  local current_version
+  if [ -d "$VSCODE_HOME" ]; then
+    current_version="$( get_version "$VSCODE_HOME/current" )"
+    echo "Current VSCode version: $current_version"
+  else
+    echo 'No current VSCode found. Installing...'
+  fi
+
+  local output_filename
+  output_filename="$( mktemp 'tmp.XXXXXXXXXX.vscode.tar.gz' )"
+  local extract_dir
+  extract_dir="$( mktemp --directory 'tmp.XXXXXXXXXX.vscode' )"
+
+  download_tarball "$output_filename" "$DOWNLOAD_URL"
+  extract_tarball "$output_filename" "$extract_dir"
+  default_vscode_path="$extract_dir/VSCode-$OS_NAME"
+  version="$( get_version "$default_vscode_path" )"
+  echo "Latest version from tarball downloaded: $version"
+  vscode_dir="vscode-$version"
+  mv "$default_vscode_path" "$extract_dir/$vscode_dir"
+
+  if [ -z "$current_version" ]; then
+    install_vscode "$extract_dir" "$vscode_dir"
+  else
+    local versions_compared
+    versions_compared="$( compare_versions "$current_version" "$version" )"
+    if (( versions_compared < 0 )); then
+      echo "Updating VSCode: $current_version -> $version"
+      install_vscode "$extract_dir" "$vscode_dir"
+      echo 'Updated!'
+    elif (( versions_compared > 0 )); then
+      echo 'Hmm, the latest version from the tarball downloaded is less than the current one, smth gone strange...'
+    else
+      echo 'The latest version of VSCode is already installed'
+    fi
+  fi
+
+  rm "$output_filename"
+  rm -rf "$extract_dir"
+}
+
+main "$@"

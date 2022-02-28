@@ -1,4 +1,4 @@
-all: polybar zsh i3 conky dunst picom alacritty
+all: polybar zsh i3 conky dunst picom alacritty vscode-install
 
 all-system: system-vconsole system-udev system-xorg
 
@@ -113,3 +113,9 @@ system-xorg:
 		system/etc/X11/xorg.conf.d/10-monitor.conf \
 		system/etc/X11/xorg.conf.d/20-intel.conf \
 		system/etc/X11/xorg.conf.d/90-touchpad.conf
+
+vscode-install:
+	@install --verbose --compare --directory \
+		$$HOME/.local/bin
+	@install --verbose --compare --target-directory $$HOME/.local/bin \
+		user/.local/bin/vscode-install
