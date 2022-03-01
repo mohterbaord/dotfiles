@@ -1,8 +1,16 @@
-#!/bin/sh
+#!/bin/zsh
+
+# Dependencies:
+#   mogrify (extra/imagemagick)
+#   rofi (community/rofi)
+#   scrot (community/scrot)
+#   xrandr (extra/xorg-xrandr)
 
 # Environment:
 #   SCROT_DIR - path (required)
 #   CHMON - boolean (optional, default = true)
+#   ROFI_THEME - string (optional)
+
 if [ -z "$CHMON" ]; then
   CHMON=true
 fi
@@ -16,7 +24,7 @@ fi
 # \7 - width offset (px)
 # \8 - height offset (px)
 # \9 - identifier
-XRANDR_MONITOR_PATTERN='^\s([[:digit:]]+):\s\+?\*?(\w*)\s([[:digit:]]+)\/([[:digit:]]+)x([[:digit:]]+)\/([[:digit:]]+)\+([[:digit:]]+)\+([[:digit:]]+)\s+(\w+)$'
+XRANDR_MONITOR_PATTERN='^\s*([[:digit:]]+):\s\+?\*?(\w*)\s([[:digit:]]+)\/([[:digit:]]+)x([[:digit:]]+)\/([[:digit:]]+)\+([[:digit:]]+)\+([[:digit:]]+)\s+(\w+)$'
 
 # \1 - timestamp
 # \2 - width (px)
@@ -24,59 +32,128 @@ XRANDR_MONITOR_PATTERN='^\s([[:digit:]]+):\s\+?\*?(\w*)\s([[:digit:]]+)\/([[:dig
 # \4 - extension
 SCROT_FILENAME_PATTERN='^([[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2}-[[:digit:]]{6})_(\w+)x(\w+)_scrot\.(\w+)$'
 
+function get_monitors_count() {
+  local list_active_monitors_output="$1"
+  echo "$list_active_monitors_output" \
+    | head -1 \
+    | sed --regexp-extended 's/^Monitors: ([[:digit:]]+)$/\1/'
+}
 
-# Make screenshot
-scrot_file=$(scrot --exec "mv \$f $SCROT_DIR; echo \$f" $@)
+function get_active_monitors() {
+  local list_active_monitors_output="$1"
+  local monitors_count=$(( $2 ))
+  echo "$list_active_monitors_output" \
+    | tail -$monitors_count
+}
 
+function create_active_monitors_pattern() {
+  local active_monitors="$1"
 
-[ "$CHMON" = false ] && exit
+  local active_monitors_pattern
+  local i=0
+  while read -r active_monitor; do
+    local active_monitor_identifier
+    active_monitor_identifier="$( echo "$active_monitor" \
+      | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\9/" )"
 
+    if (( i == 0 )); then
+      active_monitors_pattern="$active_monitor_identifier"
+    else
+      active_monitors_pattern="$active_monitors_pattern|$active_monitor_identifier"
+    fi
 
-# Select monitor to cut screenshot
-list_active_monitors_output=$(xrandr --listactivemonitors)
+    (( i += 1 ))
+  done < <( echo "$active_monitors" )
 
-monitors_count=$(echo "$list_active_monitors_output" \
-  | head -1 \
-  | sed --regexp-extended 's/^Monitors: ([[:digit:]]+)$/\1/')
-[[ "$monitors_count" -eq 1 ]] && exit
+  echo "^($active_monitors_pattern)\s(connected)"
+}
 
-active_monitors=$(echo "$list_active_monitors_output" \
-  | tail -$monitors_count)
+function get_connected_monitors_count() {
+  local active_monitors_pattern="$1"
+  xrandr | grep --count --extended-regexp "$active_monitors_pattern"
+}
 
-active_monitors_pattern=$(echo "$active_monitors" \
-  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\9/")
-active_monitors_pattern=$(echo $active_monitors_pattern \
-  | sed --regexp-extended 's/\s/|/')
-active_monitors_pattern="^($active_monitors_pattern)\s(connected)"
-connected_monitors_count=$(xrandr \
-  | grep --extended-regexp "$active_monitors_pattern" \
-  | wc --lines)
-echo $connected_monitors_count
-[ "$connected_monitors_count" -le 1 ] && exit
+choose_monitor() {
+  local active_monitors="$1"
 
-selected_monitor=$(echo "$active_monitors" \
-  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\9/" \
-  | rofi -dmenu -p "Screenshot for monitor...")
-[[ $(echo -n "$selected_monitor" | wc -c) -eq 0 ]] && exit
+  local active_monitors_pattern
+  active_monitors_pattern="$( create_active_monitors_pattern "$active_monitors" )"
 
+  local connected_monitors_count
+  connected_monitors_count="$( get_connected_monitors_count "$active_monitors_pattern" )"
 
-# Cut screenshot
-selected_monitor_info=$(echo "$active_monitors" | grep "$selected_monitor")
-selected_monitor_width=$(echo "$selected_monitor_info" \
-  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\3/")
-selected_monitor_height=$(echo "$selected_monitor_info" \
-  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\5/")
-selected_monitor_width_offset=$(echo "$selected_monitor_info" \
-  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\7/")
-selected_monitor_height_offset=$(echo "$selected_monitor_info" \
-  | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\8/")
+  if (( connected_monitors_count > 1 )); then
+    local active_monitors_ids
+    active_monitors_ids="$( echo "$active_monitors" \
+      | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\9/" )"
 
-output_file=$(echo "$scrot_file" \
-  | sed --regexp-extended "s/$SCROT_FILENAME_PATTERN/\1_${selected_monitor}_${selected_monitor_width}x${selected_monitor_height}_scrot.\4/")
+    if [ -z "$ROFI_THEME" ]; then
+      echo "$active_monitors_ids" | rofi -dmenu -p 'Screenshot for monitor...'
+    else
+      echo "$active_monitors_ids" | rofi -dmenu -p 'Screenshot for monitor...' -theme "$ROFI_THEME"
+    fi
+  fi
+}
 
-mogrify \
-  -crop "${selected_monitor_width}x${selected_monitor_height}+${selected_monitor_width_offset}+${selected_monitor_height_offset}" \
-  -write "$SCROT_DIR/$output_file" \
-  "$SCROT_DIR/$scrot_file"
+cut_screenshot() {
+  local active_monitors="$1"
+  local selected_monitor="$2"
+  local scrot_filename="$3"
 
-rm "$SCROT_DIR/$scrot_file"
+  local selected_monitor_info
+  selected_monitor_info="$( echo "$active_monitors" | grep "$selected_monitor" )"
+
+  local mon_width
+  mon_width="$( echo "$selected_monitor_info" \
+    | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\3/" )"
+
+  local mon_height
+  mon_height="$( echo "$selected_monitor_info" \
+    | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\5/" )"
+
+  local mon_width_offset
+  mon_width_offset="$( echo "$selected_monitor_info" \
+    | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\7/" )"
+
+  local mon_height_offset
+  mon_height_offset="$( echo "$selected_monitor_info" \
+    | sed --regexp-extended "s/$XRANDR_MONITOR_PATTERN/\8/" )"
+
+  local output_file
+  output_file="$( echo "$scrot_filename" \
+    | sed --regexp-extended "s/$SCROT_FILENAME_PATTERN/\1_${selected_monitor}_${mon_width}x${mon_height}_scrot.\4/" )"
+
+  mogrify \
+    -crop "${mon_width}x${mon_height}+${mon_width_offset}+${mon_height_offset}" \
+    -page "${mon_width}x${mon_height}+0+0" \
+    -write "$SCROT_DIR/$output_file" \
+    "$SCROT_DIR/$scrot_filename"
+}
+
+main() {
+  local scrot_filename
+  scrot_filename="$( scrot --exec "mv \$f $SCROT_DIR; echo \$f" "$@" )"
+
+  if [ "$CHMON" = true ]; then
+    local list_active_monitors_output
+    list_active_monitors_output="$( xrandr --listactivemonitors )"
+
+    local monitors_count
+    monitors_count="$( get_monitors_count "$list_active_monitors_output" )"
+
+    if (( monitors_count > 1 )); then
+      local active_monitors
+      active_monitors="$( get_active_monitors "$list_active_monitors_output" $(( monitors_count )) )"
+
+      local selected_monitor
+      selected_monitor="$( choose_monitor "$active_monitors" )"
+
+      if [ -n "$selected_monitor" ]; then
+        cut_screenshot "$active_monitors" "$selected_monitor" "$scrot_filename"
+        rm "$SCROT_DIR/$scrot_filename"
+      fi
+    fi
+  fi
+}
+
+main "$@"
