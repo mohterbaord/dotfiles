@@ -33,9 +33,10 @@ bindsym $mod+Return exec alacritty
 # kill focused window
 bindsym $mod+Shift+q kill
 
-# Application launcher
-# TODO: rofi configuration
-bindsym $mod+d exec "rofi -modi drun,run -show drun -theme mohterbaord"
+# Rofi launchers
+set $rofi_theme <% .rofi.theme %>
+bindsym $mod+d exec "rofi -modi drun,run -show drun -theme $rofi_theme"
+bindsym $mod+c exec "rofi -show ssh -theme $rofi_theme"
 
 # change focus
 bindsym $mod+j focus left
@@ -177,8 +178,8 @@ mode "$mode_resize" {
 
 ## Making Screenshots
 set $SCROT_DIR $HOME/data/media/pics/screenshots/scrot
-bindsym Print exec "SCROT_DIR=$SCROT_DIR scrotcrop"
-bindsym Ctrl+Print exec "SCROT_DIR=$SCROT_DIR CHMON=false scrotcrop --focused"
+bindsym Print exec "SCROT_DIR=$SCROT_DIR ROFI_THEME=$rofi_theme scrotcrop"
+bindsym Ctrl+Print exec "SCROT_DIR=$SCROT_DIR CHMON=false ROFI_THEME=$rofi_theme scrotcrop --focused"
 
 ## Bluetooth toggling
 bindsym $mod+b exec --no-startup-id "bluepoop toggle"

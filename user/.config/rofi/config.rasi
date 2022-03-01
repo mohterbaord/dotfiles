@@ -1,0 +1,19 @@
+configuration {
+  font: "<% .global.font.monospaced %> 12";
+  show-icons: true;
+  drun-show-actions: true;
+  drun-display-format: "{name} [<b>•</b> <span weight='light'><i>{generic}</i></span>]";
+  cycle: false;
+  sidebar-mode: true;
+  application-fallback-icon: "/usr/share/icons/la-capitaine/apps/scalable/window.svg";
+
+  timeout {
+    action: "kb-cancel";
+    delay: 0;
+  }
+
+  filebrowser {
+    directories-first: true;
+    sorting-method: "name";
+  }
+}

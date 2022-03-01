@@ -1,4 +1,4 @@
-all: polybar zsh i3 conky dunst picom alacritty vscode-install
+all: polybar zsh i3 conky dunst picom alacritty vscode-install rofi
 
 all-system: system-vconsole system-udev system-xorg
 
@@ -37,6 +37,15 @@ polybar:
 		bundle/user/polybar/.config/polybar/config/include/module/pulseaudio.ini \
 		bundle/user/polybar/.config/polybar/config/include/module/wlan.ini \
 		bundle/user/polybar/.config/polybar/config/include/module/xkeyboard.ini
+
+rofi:
+	@rm -rf bundle/user/rofi
+	@./templater.sh --src=user/.config/rofi --dest=bundle/user/rofi --dest-prefix=.config/rofi --values=values.yml
+	@install --verbose --compare --directory \
+		$$HOME/.config/rofi
+	@install --verbose --compare --target-directory=$$HOME/.config/rofi \
+		bundle/user/rofi/.config/rofi/config.rasi \
+		bundle/user/rofi/.config/rofi/mohterbaord.rasi
 
 zsh:
 	@install --verbose --compare --directory \

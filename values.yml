@@ -19,6 +19,7 @@ global:
 
     bg: '%{ .global.color.black }'
     fg: '%{ .global.color.light_grey }'
+    theme: '%{ .global.color.green }'
 
   font:
     monospaced: 'Cascadia Code'
@@ -28,3 +29,6 @@ polybar:
     home: '%{ $HOME }/.config/polybar'
     bin: '$POLYBAR_HOME/bin'
     include_conf: '%{ .polybar.path.home }/config/include'
+
+rofi:
+  theme: 'mohterbaord'
