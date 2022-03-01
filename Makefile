@@ -60,11 +60,13 @@ zsh:
 		user/.local/bin/frameshot
 
 i3:
+	@rm -rf bundle/user/i3
+	@./templater.sh --src=user/.config/i3 --dest=bundle/user/i3 --dest-prefix=.config/i3 --values=values.yml
 	@install --verbose --compare --directory \
 		$$HOME/.config/i3 \
 		$$HOME/.local/bin
 	@install --verbose --compare --mode=644 --target-directory=$$HOME/.config/i3 \
-		user/.config/i3/config
+		bundle/user/i3/.config/i3/config
 	@install --verbose --compare --target-directory=$$HOME/.local/bin \
 		user/.local/bin/bluepoop \
 		user/.local/bin/pa-set-sink-volume-limited \
