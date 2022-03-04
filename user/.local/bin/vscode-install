@@ -56,9 +56,9 @@ install_vscode() {
   install --verbose --compare --directory "$VSCODE_HOME"
   cp --recursive "$extract_dir/$vscode_dir" "$VSCODE_HOME"
   chown --recursive root:root "$VSCODE_HOME/$vscode_dir"
-  ln --force --symbolic "$VSCODE_HOME/$vscode_dir" "$VSCODE_HOME/current"
-  ln --force --symbolic "$VSCODE_HOME/current/code" "$BIN_HOME/vscode"
-  ln --force --symbolic "$BIN_HOME/vscode" "$BIN_HOME/code"
+  ln --force --no-dereference --symbolic "$VSCODE_HOME/$vscode_dir" "$VSCODE_HOME/current"
+  ln --force --no-dereference --symbolic "$VSCODE_HOME/current/code" "$BIN_HOME/vscode"
+  ln --force --no-dereference --symbolic "$BIN_HOME/vscode" "$BIN_HOME/code"
 }
 
 main() {
