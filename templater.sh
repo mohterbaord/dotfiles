@@ -172,18 +172,15 @@ function substitute_in_place {
     | sed --regexp-extended "s/$pattern_placeholder_content/\\1/" \
     | uniq )"
   local value_occurrence
+  local pattern_placeholder_content_occurrence
+  local value
+  local value_escaped
   echo "$value_occurrences" | while read -r value_occurrence; do
     if [ -n "$value_occurrence" ]; then
-      local pattern_placeholder_content
-      pattern_placeholder_content="$( printf "$PATTERN_PLACEHOLDER_TEMPLATER" "$value_occurrence" )"
-
-      local value
+      pattern_placeholder_content_occurrence="$( printf "$PATTERN_PLACEHOLDER_TEMPLATER" "$value_occurrence" )"
       value="$( get_value_from_yaml "$value_occurrence" "$values_file" )"
-
-      local value_escaped
       value_escaped="$( escape_for_sed "$value" )"
-
-      sed --in-place --regexp-extended "s/$pattern_placeholder_content/$value_escaped/g" "$template_file"
+      sed --in-place --regexp-extended "s/$pattern_placeholder_content_occurrence/$value_escaped/g" "$template_file"
     fi
   done
 }
@@ -223,20 +220,20 @@ function resolve_template_from_dir_to_dir {
 
   # create bundle dirs
   local template_dir
+  local unprefixed_src_dir
+  local dest_subdir
   find "$src_dir" -type d | sed --regexp-extended 's#(.*)#\1/#' | while read -r template_dir; do
-    local unprefixed_src_dir
     unprefixed_src_dir="$( echo -n "$template_dir" | sed --regexp-extended "s#^$src_dir(.*)#\1#" )"
-    local dest_subdir
     dest_subdir="$( concat_paths_and_clean "$dest_dir" "$unprefixed_src_dir" )"
     mkdir --verbose --parents "$dest_subdir"
   done
 
   # create bundle files resolved
   local template_file
+  local unprefixed_src_file
+  local dest_file
   find "$src_dir" -type f | while read -r template_file; do
-    local unprefixed_src_file
     unprefixed_src_file="$( echo -n "$template_file" | sed --regexp-extended "s#^$src_dir(.*)#\1#" )"
-    local dest_file
     dest_file="$( concat_paths_and_clean "$dest_dir" "$unprefixed_src_file" )"
     resolve_template_from_file_to_file "$template_file" "$dest_file" "$values"
   done
