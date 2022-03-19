@@ -204,8 +204,28 @@ for_window [class="TelegramDesktop"] move to workspace $ws5, workspace --no-auto
 
 
 # Colors
-client.focused #00af87 #00af87 #c0c0c0 #00875f #00af87
-client.unfocused #232323 #232323 #666666 #232323 #232323
+set $color_client_focused_border #<% .global.color.theme %>
+set $color_client_focused_bg #<% .global.color.bg %>
+set $color_client_focused_fg #<% .global.color.fg %>
+set $color_client_focused_indicator #<% .global.color.theme %>
+set $color_client_focused_child_border #<% .global.color.theme %>
+set $color_client_unfocused_border #<% .global.color.bg %>
+set $color_client_unfocused_bg #<% .global.color.bg %>
+set $color_client_unfocused_fg #<% .global.color.grey %>
+set $color_client_unfocused_indicator #<% .global.color.bg %>
+set $color_client_unfocused_child_border #<% .global.color.bg %>
+client.focused \
+    $color_client_focused_border \
+    $color_client_focused_bg \
+    $color_client_focused_fg \
+    $color_client_focused_indicator \
+    $color_client_focused_child_border
+client.unfocused \
+    $color_client_unfocused_border \
+    $color_client_unfocused_bg \
+    $color_client_unfocused_fg \
+    $color_client_unfocused_indicator \
+    $color_client_unfocused_child_border
 
 
 # Autostart

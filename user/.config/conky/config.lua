@@ -9,7 +9,7 @@ color_grey = '<% .global.color.grey %>'
 color_white = '<% .global.color.white %>'
 
 color_bg = color_black
-color_fg_primary = color_magenta
+color_fg_primary = '<% .global.color.theme %>'
 color_fg_primary_dimmed = color_grey
 color_fg_secondary = color_white
 color_fg_secondary_dimmed = color_grey

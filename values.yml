@@ -19,7 +19,7 @@ global:
 
     bg: '%{ .global.color.black }'
     fg: '%{ .global.color.light_grey }'
-    theme: '%{ .global.color.green }'
+    theme: '%{ .global.color.magenta }'
 
   font:
     monospaced: 'Cascadia Code'
