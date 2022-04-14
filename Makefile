@@ -1,4 +1,4 @@
-all: polybar zsh i3 conky dunst picom alacritty vscode-install rofi
+all: polybar zsh i3 conky dunst picom alacritty vscode-install rofi git
 
 all-system: system-vconsole system-udev system-xorg
 
@@ -130,3 +130,9 @@ vscode-install:
 		$$HOME/.local/bin
 	@install --verbose --compare --target-directory $$HOME/.local/bin \
 		user/.local/bin/vscode-install
+
+git:
+	@rm -rf bundle/user/git
+	@./templater.sh --src=user/.gitconfig --dest=bundle/user/git/ --values=values.yml
+	@install --verbose --compare --mode=644 --target-directory=$$HOME \
+		bundle/user/git/.gitconfig

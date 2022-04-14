@@ -1,0 +1,23 @@
+[init]
+  defaultBranch = main
+
+[alias]
+  st = status
+  ci = commit
+  br = branch
+  co = checkout
+
+[user]
+  name = Sergey Sokolov
+  email = mohterbaord@gmail.com
+  signingkey = <% .key.gpg.git %>
+
+[core]
+  autocrlf = input
+  editor = nvim
+
+[commit]
+  gpgsign = true
+
+[pull]
+  rebase = false
